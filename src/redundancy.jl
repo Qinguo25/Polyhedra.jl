@@ -426,8 +426,8 @@ function isredundant(p::VRep{T}, h::HRepElement; strongly = false, d::Int=dim(p)
     checkvconsistency(p)
     hp = hyperplane(h)
     pcount = count(p -> in(p, hp; tol), points(p))
-    # every line is in h, otherwise it would not be valid
-    rcount = nlines(p) + count(r -> r in hp, rays(p))
+    lcount = count(l -> l in hp, lines(p))
+    rcount = lcount + count(r -> r in hp, rays(p))
     if pcount < min(d, 1) || (!strongly && pcount + rcount < d)
         return true
     else
@@ -448,6 +448,9 @@ function isredundant(p::VRep{T}, h::HRepElement; strongly = false, d::Int=dim(p)
             end
         end
         if !iszero(rcount)
+            if !iszero(lcount)
+                offset = coord_matrix!(A, lines(p), l -> l in hp, offset)
+            end
             offset = coord_matrix!(A, rays(p), r -> r in hp, offset)
         end
         @assert offset == size(A, 1)
